@@ -11,7 +11,7 @@ import {
   Paginated_Request_API,
   Update_Status_Request_API,
   Get_Send_Request_API,
-} from "../api/api.ts";
+} from "../api/Api.ts";
 import { baseUrl, getConfig } from "./Slicer.ts";
 import { data } from "react-router-dom";
 

@@ -11,7 +11,7 @@ import {
   SignIn_API,
   Get_User_Details_API,
   SignOut_API,
-} from "../api/api.ts";
+} from "../api/Api.ts";
 import { baseUrl, getConfig } from "./Slicer.ts";
 // ✅ SignUp thunk
 export const SignUp = createAsyncThunk(

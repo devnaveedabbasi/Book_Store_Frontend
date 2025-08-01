@@ -11,7 +11,7 @@ import {
   Update_Book_Api,
   Related_Books_Api,
   Get_Book_BY_Slug_ApI,
-} from "../api/api.ts";
+} from "../api/Api.ts";
 import { baseUrl, getConfig, getConfigFormData } from "./Slicer.ts";
 import { getAllBooks } from "../../../../BookStore/src/controllers/book.controller.js";
 // ✅ AddBook thunk

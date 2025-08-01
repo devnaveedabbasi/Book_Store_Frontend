@@ -8,7 +8,7 @@ import {
   Send_Message_API,
   Edit_Message_API,
   Delete_Message_API,
-} from "../api/api.ts";
+} from "../api/Api.ts";
 import { baseUrl, getConfig, getConfigFormData, socket } from "./Slicer.ts";
 import { sendMessage } from "../../../../BookStore/src/controllers/message.controller.js";
 
