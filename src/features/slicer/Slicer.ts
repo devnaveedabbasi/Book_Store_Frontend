@@ -1,10 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { io } from "socket.io-client";
 
-// export const baseUrl = "http://localhost:4000/api/v1";
+export const baseUrl = "http://localhost:4000/api/v1";
+export const baseUrlImg = "http://localhost:4000/";
 
-export const baseUrl = "https://book-store-backend-awdm.onrender.com/api/v1";
-
-export const baseUrlImg = "https://book-store-backend-awdm.onrender.com/";
+export const socket = io("http://localhost:4000", {
+  withCredentials: false,
+});
+// export const baseUrl = "https://book-store-backend-awdm.onrender.com/api/v1";
+// export const baseUrlImg = "https://book-store-backend-awdm.onrender.com/";
 
 export const getConfig = () => ({
   headers: {

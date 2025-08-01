@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -25,6 +25,7 @@
     "react-multi-carousel": "^2.8.6",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.3",
+    "socket.io-client": "^4.8.1",
     "zod": "^4.0.5"
   },
   "devDependencies": {

@@ -14,14 +14,17 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  addNewSocketMessage,
+  DeleteMessage,
   EditMessage,
   GetChatUsers,
   GetMessages,
   SendMessage,
 } from "../features/slicer/MessageSlice";
-import { baseUrlImg } from "../features/slicer/Slicer";
+import { baseUrlImg, socket } from "../features/slicer/Slicer";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
+import { GetUserDetails } from "../features/slicer/AuthSlice";
 
 interface SidebarUser {
   userId: string;
@@ -63,6 +66,51 @@ const ChatInterface = () => {
   const { AllChatUsers, isLoading, isChatLoading, AllMessages } = useSelector(
     (state: any) => state.MessageSlice
   );
+
+  const [currentUserId, setCurrentUserId] = useState<any>([]);
+
+  useEffect(() => {
+    dispatch(GetUserDetails() as any);
+  }, []);
+
+  const { UserData } = useSelector((state: any) => state.AuthSlice);
+
+  useEffect(() => {
+    if (UserData && UserData.data && UserData.data._id) {
+      setCurrentUserId(UserData.data._id);
+    }
+  }, [UserData]);
+
+  useEffect(() => {
+    // Add current user
+    socket.emit("addUser", currentUserId);
+
+    // Listen for messages
+    socket.on("receiveMessage", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+
+    return () => {
+      socket.off("receiveMessage");
+    };
+  }, [currentUserId]);
+
+  useEffect(() => {
+    // Connect once
+    socket.on("connect", () => {
+      console.log("🟢 Socket connected:", socket.id);
+    });
+
+    // Message receive karo
+    socket.on("sendMessage", (msg) => {
+      console.log("📩 New Message:", msg);
+      dispatch(addNewSocketMessage(msg));
+    });
+
+    return () => {
+      socket.off("sendMessage"); // cleanup on unmount
+    };
+  }, []);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -112,13 +160,19 @@ const ChatInterface = () => {
     formData.append("receiverId", selectedUser.userId);
     if (messageInput.trim()) formData.append("text", messageInput);
     sendingImages.forEach((file) => formData.append("image", file));
-    await dispatch(SendMessage(formData) as any);
+    // await dispatch(SendMessage(formData) as any);
+    socket.emit("sendMessage", {
+      senderId: currentUserId,
+      receiverId: selectedUser.userId,
+      text: messageInput,
+      images: sendingImages.map((file) => file.name),
+    });
     setMessageInput("");
     setSendingImages([]);
     setImagePreview(null);
     setPreviewFile(null);
     setIsSending(false);
-    dispatch(GetMessages(selectedUser.userId) as any);
+    // dispatch(GetMessages(selectedUser.userId) as any);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -150,7 +204,7 @@ const ChatInterface = () => {
   };
 
   const handleDeleteMessage = async (msgId: string) => {
-    // await dispatch(DeleteMessage(msgId) as any);
+    await dispatch(DeleteMessage(msgId) as any);
   };
 
   const cancelImagePreview = () => {
@@ -377,7 +431,7 @@ const ChatInterface = () => {
                               {/* Only show edit if message has text */}
                               {hasText && (
                                 <button
-                                  className="p-1 hover:bg-gray-100 rounded-full"
+                                  className="p-1  rounded-full"
                                   onClick={() => {
                                     console.log(
                                       "Edit message ID:",
@@ -393,7 +447,7 @@ const ChatInterface = () => {
                               )}
                               {/* Always show delete for own messages */}
                               <button
-                                className="p-1 hover:bg-gray-100 rounded-full"
+                                className="p-1  rounded-full"
                                 onClick={() => {
                                   console.log(
                                     "Delete message ID:",

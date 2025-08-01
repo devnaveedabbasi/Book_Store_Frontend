@@ -7,8 +7,10 @@ import {
   Get_Messages_API,
   Send_Message_API,
   Edit_Message_API,
+  Delete_Message_API,
 } from "../api/api.ts";
-import { baseUrl, getConfig, getConfigFormData } from "./Slicer.ts";
+import { baseUrl, getConfig, getConfigFormData, socket } from "./Slicer.ts";
+import { sendMessage } from "../../../../BookStore/src/controllers/message.controller.js";
 
 export const GetChatUsers = createAsyncThunk(
   "msg/GetCheckRequst",
@@ -73,6 +75,21 @@ export const EditMessage = createAsyncThunk(
   }
 );
 
+export const DeleteMessage = createAsyncThunk(
+  "msg/DeleteMessage",
+  async (id: any, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(
+        baseUrl + Delete_Message_API + "/" + id,
+        getConfig()
+      );
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(HandleApiError(err));
+    }
+  }
+);
+
 const initialState = {
   isLoading: false,
   isChatLoading: false,
@@ -85,7 +102,11 @@ const initialState = {
 const BookRequestSlice = createSlice({
   name: "book",
   initialState,
-  reducers: {},
+  reducers: {
+    addNewSocketMessage: (state, action) => {
+      state.AllMessages.push(action.payload);
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(GetChatUsers.pending, (state) => {
@@ -115,5 +136,6 @@ const BookRequestSlice = createSlice({
       });
   },
 });
+export const { addNewSocketMessage } = BookRequestSlice.actions;
 
 export default BookRequestSlice.reducer;
