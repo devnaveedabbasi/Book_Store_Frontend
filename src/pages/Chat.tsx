@@ -13,18 +13,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  addNewSocketMessage,
-  DeleteMessage,
-  EditMessage,
-  GetChatUsers,
-  GetMessages,
-  SendMessage,
-} from "../features/slicer/MessageSlice";
+import { GetUserDetails } from "../features/slicer/AuthSlice";
 import { baseUrlImg, socket } from "../features/slicer/Slicer";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
-import { GetUserDetails } from "../features/slicer/AuthSlice";
 
 interface SidebarUser {
   userId: string;
@@ -33,6 +25,7 @@ interface SidebarUser {
   lastMessage: string;
   lastSeen: string;
   lastTime: string;
+  online: boolean;
 }
 
 interface Message {
@@ -41,6 +34,8 @@ interface Message {
   receiver: string;
   text?: string;
   image?: string[];
+  edited?: boolean;
+  editedAt?: string;
   createdAt: string;
 }
 
@@ -61,13 +56,10 @@ const ChatInterface = () => {
   const [modalStartIndex, setModalStartIndex] = useState(0);
   const [editMessageId, setEditMessageId] = useState<string | null>(null);
   const [editMessageText, setEditMessageText] = useState<string>("");
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
   const dispatch = useDispatch();
-  const { AllChatUsers, isLoading, isChatLoading, AllMessages } = useSelector(
-    (state: any) => state.MessageSlice
-  );
-
-  const [currentUserId, setCurrentUserId] = useState<any>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
     dispatch(GetUserDetails() as any);
@@ -82,78 +74,83 @@ const ChatInterface = () => {
   }, [UserData]);
 
   useEffect(() => {
-    // Add current user
+    if (!currentUserId) return;
+
+    // Add current user to online users
     socket.emit("addUser", currentUserId);
 
-    socket.on("getOnlineUsers", (users) => {
-      console.log("Online Users:", users);
-      // update state / UI here
-    });
-    // Listen for messages
-    socket.on("receiveMessage", (msg) => {
-      setMessages((prev) => [...prev, msg]);
+    // Get chat users
+    socket.emit("getChatUsers", currentUserId);
+
+    // Listen for online users updates
+    socket.on("getOnlineUsers", (onlineUserIds: string[]) => {
+      setOnlineUsers(onlineUserIds);
+
+      // Update sidebar users with online status
+      setSidebarUsers((prev) =>
+        prev.map((user) => ({
+          ...user,
+          online: onlineUserIds.includes(user.userId),
+        }))
+      );
     });
 
-    socket.once("messageUpdated", (updatedMessage) => {
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
+    // Listen for chat users list
+    socket.on("chatUsersList", (users: SidebarUser[]) => {
+      setSidebarUsers(users);
+    });
+
+    // Listen for new messages
+    socket.on("receiveMessage", (message: Message) => {
+      setMessages((prev) => [...prev, message]);
+      // Update chat users list
+      socket.emit("getChatUsers", currentUserId);
+    });
+
+    // Listen for message updates
+    socket.on("messageUpdated", (updatedMessage: Message) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
           msg._id === updatedMessage._id ? updatedMessage : msg
         )
       );
     });
 
-    socket.emit("getChatUsers", currentUserId);
-
-    socket.on("chatUsersList", (users) => {
-      setSidebarUsers(users); // useState
-      console.log(users, "s");
+    // Listen for message deletions
+    socket.on("messageDeleted", ({ messageId }) => {
+      setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
     });
 
     return () => {
+      socket.off("getOnlineUsers");
+      socket.off("chatUsersList");
       socket.off("receiveMessage");
+      socket.off("messageUpdated");
+      socket.off("messageDeleted");
     };
   }, [currentUserId]);
 
-  useEffect(() => {
-    // Connect once
-    socket.on("connect", () => {
-      console.log("🟢 Socket connected:", socket.id);
-    });
+  console.log(messages, "ms");
 
-    // Message receive karo
-    socket.on("sendMessage", (msg) => {
-      console.log("📩 New Message:", msg);
-      dispatch(addNewSocketMessage(msg));
+  useEffect(() => {
+    if (selectedUser && currentUserId) {
+      socket.emit("getMessages", {
+        currentUserId,
+        selectedUserId: selectedUser.userId,
+      });
+    }
+  }, [selectedUser, currentUserId]);
+
+  // Listen for messages list
+  useEffect(() => {
+    socket.on("messagesList", (messages: Message[]) => {
+      setMessages(messages);
     });
 
     return () => {
-      socket.off("sendMessage"); // cleanup on unmount
+      socket.off("messagesList");
     };
   }, []);
-
-  // useEffect(() => {
-  //   const fetchUsers = async () => {
-  //     await dispatch(GetChatUsers() as any);
-  //   };
-  //   fetchUsers();
-  // }, [dispatch]);
-
-  useEffect(() => {
-    if (AllChatUsers?.data) {
-      setSidebarUsers(AllChatUsers.data as SidebarUser[]);
-    } else {
-      setSidebarUsers([]);
-    }
-    if (AllMessages) {
-      setMessages(AllMessages.data);
-    }
-  }, [AllChatUsers, AllMessages]);
-
-  useEffect(() => {
-    if (selectedUser) {
-      dispatch(GetMessages(selectedUser.userId) as any);
-    }
-  }, [selectedUser, dispatch]);
 
   const filteredUsers = sidebarUsers.filter((user) =>
     user.fullName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -172,26 +169,27 @@ const ChatInterface = () => {
   };
 
   const handleSendMessage = async () => {
-    if ((!messageInput.trim() && sendingImages.length === 0) || !selectedUser)
+    if (
+      (!messageInput.trim() && sendingImages.length === 0) ||
+      !selectedUser ||
+      !currentUserId
+    )
       return;
+
     setIsSending(true);
-    const formData = new FormData();
-    formData.append("receiverId", selectedUser.userId);
-    if (messageInput.trim()) formData.append("text", messageInput);
-    sendingImages.forEach((file) => formData.append("image", file));
-    // await dispatch(SendMessage(formData) as any);
+
     socket.emit("sendMessage", {
       senderId: currentUserId,
       receiverId: selectedUser.userId,
       text: messageInput,
       images: sendingImages.map((file) => file.name),
     });
+
     setMessageInput("");
     setSendingImages([]);
     setImagePreview(null);
     setPreviewFile(null);
     setIsSending(false);
-    // dispatch(GetMessages(selectedUser.userId) as any);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -211,26 +209,14 @@ const ChatInterface = () => {
     setEditMessageText(msg.text || "");
   };
 
-  useEffect(() => {
-    const handleUpdate = (updatedMessage) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === updatedMessage._id ? updatedMessage : msg
-        )
-      );
-    };
-
-    socket.on("messageUpdated", handleUpdate);
-
-    return () => {
-      socket.off("messageUpdated", handleUpdate);
-    };
-  }, []);
-
   const handleSaveEdit = async () => {
+    if (!editMessageId || !selectedUser || !currentUserId) return;
+
     socket.emit("updateMessage", {
       messageId: editMessageId,
       newText: editMessageText,
+      currentUserId,
+      selectedUserId: selectedUser.userId,
     });
 
     setEditMessageId(null);
@@ -238,8 +224,13 @@ const ChatInterface = () => {
   };
 
   const handleDeleteMessage = async (msgId: string) => {
-    await dispatch(DeleteMessage(msgId) as any);
-    socket.emit("deleteMessage", { msgId });
+    if (!selectedUser || !currentUserId) return;
+
+    socket.emit("deleteMessage", {
+      messageId: msgId,
+      currentUserId,
+      selectedUserId: selectedUser.userId,
+    });
   };
 
   const cancelImagePreview = () => {
@@ -254,6 +245,10 @@ const ChatInterface = () => {
 
   const getInitial = (name: string) =>
     name && name.length > 0 ? name[0].toUpperCase() : "?";
+
+  const isUserOnline = (userId: string) => {
+    return onlineUsers.includes(userId);
+  };
 
   return (
     <div className="h-screen flex bg-gray-50 overflow-hidden">
@@ -300,6 +295,10 @@ const ChatInterface = () => {
                   <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-xl font-bold text-blue-700">
                     {getInitial(user.fullName)}
                   </div>
+                  {/* Online status indicator */}
+                  {user.online && (
+                    <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
                 </div>
                 <div className="ml-3 flex-1">
                   <div className="flex items-center justify-between">
@@ -337,15 +336,23 @@ const ChatInterface = () => {
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-lg font-bold text-blue-700">
-                  {getInitial(selectedUser.fullName)}
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-lg font-bold text-blue-700">
+                    {getInitial(selectedUser.fullName)}
+                  </div>
+                  {/* Online status indicator in header */}
+                  {selectedUser.online && (
+                    <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
                 </div>
                 <div className="ml-3">
                   <h3 className="font-medium text-gray-900">
                     {selectedUser.fullName}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {selectedUser.lastSeen
+                    {selectedUser.online
+                      ? "Online"
+                      : selectedUser.lastSeen
                       ? "Last seen " +
                         new Date(selectedUser.lastSeen).toLocaleString()
                       : ""}
@@ -367,19 +374,18 @@ const ChatInterface = () => {
 
             {/* Messages */}
             <div className="flex-1 p-4 space-y-4 bg-gray-50 overflow-y-auto">
-              {isChatLoading ? (
-                <div className="flex justify-center items-center h-full">
-                  <div className="loader border-4 border-blue-200 border-t-blue-600 rounded-full w-10 h-10 animate-spin"></div>
-                </div>
-              ) : messages?.length === 0 ? (
+              {messages?.length === 0 ? (
                 <div className="text-center text-gray-400 mt-10">
                   No messages yet
                 </div>
               ) : (
                 messages?.map((message) => {
-                  const isOwnMessage = message.sender !== selectedUser.userId; // Assuming your own messages are NOT from selectedUser
+                  const isOwnMessage =
+                    message.sender === currentUserId ||
+                    message.sender?._id === currentUserId;
                   const hasText = !!message.text;
                   const hasImage = message.image && message.image.length > 0;
+
                   return (
                     <div
                       key={message._id}
@@ -410,9 +416,10 @@ const ChatInterface = () => {
                             ))}
                           </div>
                         )}
+
                         {/* Text or Edit */}
                         {editMessageId === message._id ? (
-                          <div className="flex items-center gap-2 bg-gray-100 rounded p-2 shadow-inner">
+                          <div className="flex flex-wrap items-center gap-2 bg-gray-100 rounded p-2 shadow-inner">
                             <input
                               className="border text-black border-blue-400 rounded px-2 py-1 text-sm flex-1 focus:ring-2 focus:ring-blue-400 outline-none"
                               value={editMessageText}
@@ -424,9 +431,7 @@ const ChatInterface = () => {
                             />
                             <button
                               className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition font-semibold disabled:opacity-50"
-                              onClick={() => {
-                                handleSaveEdit();
-                              }}
+                              onClick={handleSaveEdit}
                               disabled={isSending || !editMessageText.trim()}
                             >
                               Save
@@ -446,34 +451,43 @@ const ChatInterface = () => {
                             </p>
                           </div>
                         ) : null}
+
                         <div className="px-2 pb-1 flex items-center justify-between">
-                          <p
-                            className={`text-xs ${
-                              isOwnMessage ? "text-blue-100" : "text-gray-500"
-                            }`}
-                          >
-                            {new Date(message.createdAt).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
+                          <div className="flex items-center gap-2">
+                            <p
+                              className={`text-xs ${
+                                isOwnMessage ? "text-blue-100" : "text-gray-500"
+                              }`}
+                            >
+                              {new Date(message.createdAt).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </p>
+                            {message.edited && (
+                              <span
+                                className={`text-xs ${
+                                  isOwnMessage
+                                    ? "text-blue-100"
+                                    : "text-gray-400"
+                                }`}
+                              >
+                                edited
+                              </span>
                             )}
-                          </p>
+                          </div>
+
                           {/* Edit/Delete options (show only for your own messages) */}
                           {isOwnMessage && (
                             <span className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               {/* Only show edit if message has text */}
                               {hasText && (
                                 <button
-                                  className="p-1  rounded-full"
-                                  onClick={() => {
-                                    console.log(
-                                      "Edit message ID:",
-                                      message._id
-                                    );
-                                    handleEditMessage(message);
-                                  }}
+                                  className="p-1 rounded-full"
+                                  onClick={() => handleEditMessage(message)}
                                   title="Edit"
                                   disabled={isSending}
                                 >
@@ -482,14 +496,8 @@ const ChatInterface = () => {
                               )}
                               {/* Always show delete for own messages */}
                               <button
-                                className="p-1  rounded-full"
-                                onClick={() => {
-                                  console.log(
-                                    "Delete message ID:",
-                                    message._id
-                                  );
-                                  handleDeleteMessage(message._id);
-                                }}
+                                className="p-1 rounded-full"
+                                onClick={() => handleDeleteMessage(message._id)}
                                 title="Delete"
                                 disabled={isSending}
                               >
@@ -554,7 +562,7 @@ const ChatInterface = () => {
                       >
                         <img
                           src={baseUrlImg + img}
-                          alt={`carousel-img-${idx}`}
+                          alt={baseUrlImg + img}
                           className="max-h-96 max-w-full rounded-lg shadow"
                         />
                       </div>
