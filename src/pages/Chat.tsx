@@ -85,9 +85,28 @@ const ChatInterface = () => {
     // Add current user
     socket.emit("addUser", currentUserId);
 
+    socket.on("getOnlineUsers", (users) => {
+      console.log("Online Users:", users);
+      // update state / UI here
+    });
     // Listen for messages
     socket.on("receiveMessage", (msg) => {
       setMessages((prev) => [...prev, msg]);
+    });
+
+    socket.once("messageUpdated", (updatedMessage) => {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === updatedMessage._id ? updatedMessage : msg
+        )
+      );
+    });
+
+    socket.emit("getChatUsers", currentUserId);
+
+    socket.on("chatUsersList", (users) => {
+      setSidebarUsers(users); // useState
+      console.log(users, "s");
     });
 
     return () => {
@@ -112,12 +131,12 @@ const ChatInterface = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      await dispatch(GetChatUsers() as any);
-    };
-    fetchUsers();
-  }, [dispatch]);
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     await dispatch(GetChatUsers() as any);
+  //   };
+  //   fetchUsers();
+  // }, [dispatch]);
 
   useEffect(() => {
     if (AllChatUsers?.data) {
@@ -192,12 +211,27 @@ const ChatInterface = () => {
     setEditMessageText(msg.text || "");
   };
 
-  const handleSaveEdit = async () => {
-    console.log(editMessageId);
+  useEffect(() => {
+    const handleUpdate = (updatedMessage) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === updatedMessage._id ? updatedMessage : msg
+        )
+      );
+    };
 
-    await dispatch(
-      EditMessage({ id: editMessageId, data: { text: editMessageText } }) as any
-    );
+    socket.on("messageUpdated", handleUpdate);
+
+    return () => {
+      socket.off("messageUpdated", handleUpdate);
+    };
+  }, []);
+
+  const handleSaveEdit = async () => {
+    socket.emit("updateMessage", {
+      messageId: editMessageId,
+      newText: editMessageText,
+    });
 
     setEditMessageId(null);
     setEditMessageText("");
@@ -205,6 +239,7 @@ const ChatInterface = () => {
 
   const handleDeleteMessage = async (msgId: string) => {
     await dispatch(DeleteMessage(msgId) as any);
+    socket.emit("deleteMessage", { msgId });
   };
 
   const cancelImagePreview = () => {

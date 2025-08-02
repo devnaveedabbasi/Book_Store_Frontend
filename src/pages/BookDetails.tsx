@@ -77,8 +77,8 @@ export default function BookDetailsPage() {
   }, [AllReatedBooks]);
 
   const chatWithSeller = (bookId: number) => {
-    console.log(`Chat with seller for book ID: ${bookId}`);
     navigate("/chat");
+    console.log(`Chat with seller for book ID: ${bookId}`);
   };
 
   const [loading, setLoading] = useState<Boolean>(false);
@@ -296,7 +296,11 @@ export default function BookDetailsPage() {
             </div>
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-200">
-              <PrimaryButton Icon={MessageSquare} className="w-[80%]">
+              <PrimaryButton
+                onClick={chatWithSeller}
+                Icon={MessageSquare}
+                className="w-[80%]"
+              >
                 Chat With Seller
               </PrimaryButton>
               <button
