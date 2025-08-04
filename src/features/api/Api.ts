@@ -34,6 +34,6 @@ export const Get_Send_Request_API = "/book/req/get-send-requests";
 // Message
 export const Get_Chat_Users_API = "/msg/chat-users";
 export const Get_Messages_API = "/msg/get-messages";
-export const Send_Message_API = "/msg/send-message";
+export const Image_Upload_API = "/msg/upload-images";
 export const Edit_Message_API = "/msg/edit-message";
 export const Delete_Message_API = "/msg/delete-message";

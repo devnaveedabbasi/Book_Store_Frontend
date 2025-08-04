@@ -55,7 +55,7 @@ export default function Avatar({ user, setUser }: AvatarDropdownProps) {
     <div className="relative" ref={dropdownRef}>
       <div
         onClick={toggleDropdown}
-        className="w-10 h-10 rounded-full border-2 border-gray-300 hover:scale-105 transition-transform duration-200 bg-blue-500 text-white flex items-center justify-center cursor-pointer select-none"
+        className="w-10 h-10 rounded-full border-2 border-gray-300 hover:scale-105 transition-transform duration-200 bg-purple-400 text-white flex items-center justify-center cursor-pointer select-none"
       >
         {user?.fullName?.charAt(0).toUpperCase()}
       </div>

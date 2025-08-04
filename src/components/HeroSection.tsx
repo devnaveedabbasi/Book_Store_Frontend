@@ -2,24 +2,26 @@ import { useState, useEffect } from "react";
 import {
   Menu,
   X,
-  ShoppingCart,
-  Search,
+  ChevronDown,
   User,
-  BookPlus,
-  BookUser,
+  Book,
+  Plus,
+  Send,
+  Inbox,
 } from "lucide-react";
 import { Images } from "../assets/img";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Avatar from "./common/Avatar";
 import { useDispatch, useSelector } from "react-redux";
 import { GetUserDetails } from "../features/slicer/AuthSlice";
 export default function HomePage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
-
+  const [isBookDropdownOpen, setIsBookDropdownOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -45,12 +47,30 @@ export default function HomePage() {
   }, []);
 
   const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Shop", path: "/shop" },
-    { name: "My Requests", path: "/my-request" },
-    { name: "My Listings", path: "/my-listings" },
-    { name: "Messages", path: "/about" },
+    { label: "Home", path: "/" },
+    { label: "Shop", path: "/shop" },
+    { label: "Messages", path: "/messages" },
+    {
+      label: "Books",
+      hasDropdown: true,
+      dropdownItems: [
+        { label: "My Listing", path: "/my-listing", icon: Book },
+        {
+          label: "Received Book Request",
+          path: "/received-book-request",
+          icon: Inbox,
+        },
+        { label: "Sent Book Request", path: "/send-book-request", icon: Send },
+        { label: "Add Book", path: "/add-book", icon: Plus },
+      ],
+    },
   ];
+
+  const isActivePath = (path: string) => location.pathname === path;
+  const isBookSectionActive = () =>
+    ["/mylisting", "/receivedbookrequest", "/sendbookrequest", "/addbook"].some(
+      (path) => location.pathname.startsWith(path)
+    );
   return (
     <div className="min-h-screen">
       {/* Navbar */}
@@ -78,39 +98,85 @@ export default function HomePage() {
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex space-x-6">
-              {navLinks.map(({ name, path }) => (
-                <Link
-                  key={name}
-                  to={path}
-                  className={`text-sm font-medium transition-all duration-300 ${
-                    isScrolled
-                      ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"
-                      : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"
-                  }`}
-                >
-                  {name}
-                </Link>
+
+            <div className="hidden md:flex gap-4 items-center">
+              {navLinks.map((link) => (
+                <div key={link.label} className="relative group">
+                  {link.hasDropdown ? (
+                    <div
+                      className="relative"
+                      onMouseEnter={() => setIsBookDropdownOpen(true)}
+                      onMouseLeave={() => setIsBookDropdownOpen(false)}
+                    >
+                      <button
+                        className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                          isBookSectionActive()
+                            ? "text-purple-600 font-semibold"
+                            : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600"
+                        }`}
+                      >
+                        <span>{link.label}</span>
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform ${
+                            isBookDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      <div
+                        className={`absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg transition-all duration-200 z-50 ${
+                          isBookDropdownOpen
+                            ? "opacity-100 visible translate-y-0"
+                            : "opacity-0 invisible -translate-y-2"
+                        }`}
+                      >
+                        <div className="py-2">
+                          {link.dropdownItems.map(
+                            ({ label, path, icon: Icon }) => (
+                              <Link
+                                to={path}
+                                key={label}
+                                className={`flex items-center px-4 py-2 text-sm transition-all ${
+                                  isActivePath(path)
+                                    ? "text-purple-600 bg-purple-50"
+                                    : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600 hover:bg-gray-50"
+                                }`}
+                              >
+                                <Icon className="w-4 h-4 mr-2 text-purple-400" />
+                                {label}
+                              </Link>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      to={link.path}
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                        isActivePath(link.path)
+                          ? "text-purple-600 font-semibold"
+                          : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600"
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
+                </div>
               ))}
             </div>
 
             {/* Desktop Icons */}
             <div className="hidden md:flex items-center space-x-4">
-              <BookPlus
-                onClick={() => navigate("/add-book")}
-                className="h-5 w-5 cursor-pointer text-purple-600 hover:text-purple-600 transition-all duration-300"
-              />
-              <BookUser
-                onClick={() => navigate("/book-request")}
-                className="h-5 w-5 cursor-pointer text-purple-600 hover:text-purple-600 transition-all duration-300"
-              />
               {user ? (
                 <Avatar user={user} setUser={setUser} />
               ) : (
-                <User
+                <button
                   onClick={() => navigate("/sign-up")}
-                  className="h-5 w-5 cursor-pointer text-purple-700  hover:text-purple-400 transition-all duration-300"
-                />
+                  className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600 transition-all duration-300"
+                >
+                  <User className="h-5 w-5" />
+                </button>
               )}
             </div>
 
@@ -137,39 +203,97 @@ export default function HomePage() {
           <AnimatePresence>
             {isMobileMenuOpen && (
               <motion.div
-                className="md:hidden rounded-md bg-white/95 backdrop-blur-md shadow-md px-4 py-6"
+                className="md:hidden rounded-md bg-white/95 shadow-md px-4 py-6"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="flex flex-col space-y-4">
-                  {navLinks.map(({ name, path }) => (
-                    <Link
-                      key={name}
-                      to={path}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-gray-800 text-sm font-medium hover:text-purple-600 transition-all"
-                    >
-                      {name}
-                    </Link>
-                  ))}
+                <div className="flex flex-col space-y-2">
+                  {navLinks.map((link) =>
+                    link.hasDropdown ? (
+                      <div key={link.label} className="space-y-1">
+                        <button
+                          className={`flex items-center w-full justify-between px-2 py-2 rounded-md text-base font-medium ${
+                            isBookSectionActive()
+                              ? "text-purple-600 font-semibold"
+                              : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600"
+                          } transition`}
+                          onClick={() => setIsBookDropdownOpen((prev) => !prev)}
+                        >
+                          <span className="flex items-center">
+                            {link.label}
+                            <ChevronDown
+                              className={`w-4 h-4 ml-1 transition-transform ${
+                                isBookDropdownOpen ? "rotate-180" : ""
+                              }`}
+                            />
+                          </span>
+                        </button>
+                        <AnimatePresence>
+                          {isBookDropdownOpen && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="pl-4"
+                            >
+                              <div className="flex flex-col space-y-1 mt-1">
+                                {link.dropdownItems.map(
+                                  ({ label, path, icon: Icon }) => (
+                                    <Link
+                                      to={path}
+                                      key={label}
+                                      onClick={() => {
+                                        setIsMobileMenuOpen(false);
+                                        setIsBookDropdownOpen(false);
+                                      }}
+                                      className={`flex items-center px-2 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                                        isActivePath(path)
+                                          ? "text-purple-600 bg-purple-50"
+                                          : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600 hover:bg-gray-50"
+                                      }`}
+                                    >
+                                      <Icon className="w-4 h-4 mr-2 text-purple-400" />
+                                      {label}
+                                    </Link>
+                                  )
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    ) : (
+                      <Link
+                        key={link.label}
+                        to={link.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`px-2 py-2 rounded-md text-base font-medium transition-all duration-200 ${
+                          isActivePath(link.path)
+                            ? "text-purple-600 font-semibold"
+                            : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600"
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    )
+                  )}
+
                   <div className="flex items-center space-x-6 pt-4 border-t border-gray-300 mt-2">
-                    <BookPlus
-                      onClick={() => navigate("/add-book")}
-                      className="h-5 w-5 cursor-pointer text-gray-800 hover:text-purple-600 transition-all duration-300"
-                    />
-                    <BookUser
-                      onClick={() => navigate("/book-request")}
-                      className="h-5 w-5 cursor-pointer text-gray-800 hover:text-purple-600 transition-all duration-300"
-                    />
                     {user ? (
                       <Avatar user={user} setUser={setUser} />
                     ) : (
-                      <User
-                        onClick={() => navigate("/sign-up")}
-                        className="h-5 w-5 cursor-pointer text-purple-700  hover:text-purple-400 transition-all duration-300"
-                      />
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          navigate("/sign-up");
+                        }}
+                        className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600 transition-all duration-300"
+                      >
+                        <User className="h-5 w-5" />
+                      </button>
                     )}
                   </div>
                 </div>

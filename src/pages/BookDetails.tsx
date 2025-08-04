@@ -76,9 +76,11 @@ export default function BookDetailsPage() {
     }
   }, [AllReatedBooks]);
 
-  const chatWithSeller = (bookId: number) => {
-    navigate("/chat");
-    console.log(`Chat with seller for book ID: ${bookId}`);
+  const chatWithSeller = ({ book }) => {
+    // navigate(`/chat/${book.author._id}`);
+    navigate("/chat", { state: { book } }); // Book object pass kia
+
+    console.log(book);
   };
 
   const [loading, setLoading] = useState<Boolean>(false);
@@ -297,7 +299,7 @@ export default function BookDetailsPage() {
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-200">
               <PrimaryButton
-                onClick={chatWithSeller}
+                onClick={() => chatWithSeller({ book })}
                 Icon={MessageSquare}
                 className="w-[80%]"
               >

@@ -5,9 +5,9 @@ import toast from "react-hot-toast";
 import {
   Get_Chat_Users_API,
   Get_Messages_API,
-  Send_Message_API,
   Edit_Message_API,
   Delete_Message_API,
+  Image_Upload_API,
 } from "../api/Api.ts";
 import { baseUrl, getConfig, getConfigFormData, socket } from "./Slicer.ts";
 import { sendMessage } from "../../../../BookStore/src/controllers/message.controller.js";
@@ -42,14 +42,14 @@ export const GetMessages = createAsyncThunk(
   }
 );
 
-export const SendMessage = createAsyncThunk(
-  "msg/SendMessage",
+export const ImageUpload = createAsyncThunk(
+  "msg/ImageUpload",
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        baseUrl + Send_Message_API,
+        baseUrl + Image_Upload_API,
         data,
-        getConfigFormData()
+        getConfigFormData() // No Content-Type
       );
 
       return response.data;

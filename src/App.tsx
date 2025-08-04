@@ -35,13 +35,14 @@ function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/book/:slug" element={<Book />} />
             <Route
-              path="/chat"
+              path="/messages"
               element={
                 <PrivateRoute>
                   <Chat />
                 </PrivateRoute>
               }
             />
+
             <Route
               path="/add-book"
               element={
@@ -60,7 +61,7 @@ function App() {
               }
             />
             <Route
-              path="/my-listings"
+              path="/my-listing"
               element={
                 <PrivateRoute>
                   <MyListing />
@@ -68,14 +69,14 @@ function App() {
               }
             />
             <Route
-              path="/my-request"
+              path="/received-book-request"
               element={
                 <PrivateRoute>
                   <MyRequests />
                 </PrivateRoute>
               }
             />
-            <Route path="/book-request" element={<BookRequest />} />
+            <Route path="/send-book-request" element={<BookRequest />} />
             <Route path="/sign-up" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

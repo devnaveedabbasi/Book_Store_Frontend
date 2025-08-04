@@ -17,6 +17,8 @@ import { GetUserDetails } from "../features/slicer/AuthSlice";
 import { baseUrlImg, socket } from "../features/slicer/Slicer";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
+import { ImageUpload } from "../features/slicer/MessageSlice";
+import { useLocation } from "react-router-dom";
 
 interface SidebarUser {
   userId: string;
@@ -58,8 +60,33 @@ const ChatInterface = () => {
   const [editMessageText, setEditMessageText] = useState<string>("");
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
-  const dispatch = useDispatch();
+  const location = useLocation();
+  const book = location.state?.book;
   const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  console.log(book);
+
+  useEffect(() => {
+    if (
+      book &&
+      book.author &&
+      book.author._id &&
+      currentUserId &&
+      book.author._id !== currentUserId
+    ) {
+      setSelectedUser({
+        userId: book.author._id,
+        fullName: book.author.fullName,
+        email: book.author.email,
+        lastMessage: "",
+        lastSeen: "",
+        lastTime: "",
+        online: false,
+      });
+    }
+  }, [book, currentUserId]);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(GetUserDetails() as any);
@@ -178,11 +205,12 @@ const ChatInterface = () => {
 
     setIsSending(true);
 
+    console.log(sendingImages, "ss");
     socket.emit("sendMessage", {
       senderId: currentUserId,
       receiverId: selectedUser.userId,
       text: messageInput,
-      images: sendingImages.map((file) => file.name),
+      // images: sendingImages.map((file) => file.name),
     });
 
     setMessageInput("");
@@ -609,16 +637,16 @@ const ChatInterface = () => {
             )}
 
             {/* Message Input */}
-            <div className="bg-white border-t border-gray-200 p-4">
+            <div className="bg-white border-t border-gray-200 p-2">
               <div className="flex items-center space-x-3">
-                <button
+                {/* <button
                   onClick={handleAttachFile}
                   className="p-2 hover:bg-gray-100 rounded-full"
                   disabled={sendingImages.length >= 5}
                   title={sendingImages.length >= 5 ? "Maximum 5 images" : ""}
                 >
                   <Paperclip className="w-5 h-5 text-gray-600" />
-                </button>
+                </button> */}
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -638,9 +666,6 @@ const ChatInterface = () => {
                     onKeyPress={handleKeyPress}
                     disabled={isSending}
                   />
-                  <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full">
-                    <Smile className="w-5 h-5 text-gray-600" />
-                  </button>
                 </div>
                 <button
                   onClick={handleSendMessage}
