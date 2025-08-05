@@ -14,9 +14,10 @@ import Loading from "../components/Loading";
 export interface Book {
   _id: string;
   title: string;
-  author: { _id: string; email: string } | null;
+  uploader: { _id: string; email: string } | null;
   genre?: string[];
   condition: string;
+  author: string;
   productType?: string;
   price: number;
   description: string;

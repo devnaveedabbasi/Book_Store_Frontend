@@ -78,7 +78,7 @@ export default function BookDetailsPage() {
 
   const chatWithSeller = ({ book }) => {
     // navigate(`/chat/${book.author._id}`);
-    navigate("/chat", { state: { book } }); // Book object pass kia
+    navigate("/messages", { state: { book } }); // Book object pass kia
 
     console.log(book);
   };
@@ -132,19 +132,6 @@ export default function BookDetailsPage() {
   const getCategoryColor = (category: string) => {
     // You can customize this mapping as needed
     return "bg-gradient-to-r from-blue-500 to-cyan-500 text-white";
-  };
-
-  const getConditionColor = (condition: string) => {
-    switch (condition?.toLowerCase()) {
-      case "new":
-        return "bg-emerald-500 text-white";
-      case "like new":
-        return "bg-blue-500 text-white";
-      case "used":
-        return "bg-orange-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
-    }
   };
 
   return (
@@ -206,24 +193,22 @@ export default function BookDetailsPage() {
           {/* Right Side: Details */}
           <div className="space-y-6">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 flex items-center gap-2">
-              <BookText className="w-7 h-7 text-blue-500" />
               {book.title}
             </h1>
             <div className="flex items-center gap-2 text-gray-700">
-              <User className="w-5 h-5" />
               <span className="font-medium">
-                {book.author?.fullName || "Unknown"}
+                {book.uploader?.fullName || "Unknown"}
               </span>
             </div>
             {/* Category & Icon */}
             <div className="flex items-center gap-2">
-              {book.category?.icon && (
+              {/* {book.category?.icon && (
                 <img
                   src={baseUrlImg + book.category.icon}
                   alt="cat"
                   className="w-7 h-7 rounded-full border bg-white"
                 />
-              )}
+              )} */}
               <span
                 className={`px-3 py-1 text-sm font-semibold rounded-full ${getCategoryColor(
                   book.category?.name || ""
@@ -247,9 +232,7 @@ export default function BookDetailsPage() {
             {/* Condition, ProductType, Price */}
             <div className="flex flex-wrap gap-2 items-center">
               <span
-                className={`px-3 py-1 text-xs font-medium rounded-full ${getConditionColor(
-                  book.condition
-                )}`}
+                className={`px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-400`}
               >
                 {book.condition}
               </span>

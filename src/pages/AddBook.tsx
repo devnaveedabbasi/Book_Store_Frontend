@@ -5,7 +5,8 @@ import { SelectDropdown } from "../components/common/DropdownSelect";
 import { Plus, Upload, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  AddBookSlice,
+  AddBooks,
+  GetAllBooks,
   GetAllBooksByUser,
   GetAllCategory,
   UpdateBook,
@@ -18,6 +19,7 @@ const bookSchema = z
   .object({
     title: z.string().min(1, "Title is required").max(100),
     genre: z.array(z.string()).min(1, "At least one genre is required").max(5),
+    author: z.string().min(1, "Author is required").max(100),
     condition: z.string().min(1, "Please select condition"),
     pages: z.string(),
     description: z
@@ -78,16 +80,16 @@ export default function AddBook() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<ImageFile[]>([]);
   const [formData, setFormData] = useState<FormData>({
-    title: "The",
-    genre: ["Adventure", "Philosophy"],
-    condition: "used",
-    description:
-      "A novel that combines adventure with philosophical reflections on following one’s dreams.",
+    title: "",
+    author: "",
+    genre: [],
+    condition: "",
+    description: ".",
     location: "Karachi, Pakistan",
     productType: "sale",
     categoryId: "",
-    price: "750",
-    pages: "208",
+    price: "",
+    pages: "",
   });
 
   const { slug } = useParams(); // Use slug instead of id
@@ -115,6 +117,7 @@ export default function AddBook() {
         setFormData({
           title: foundBook.title || "",
           genre: foundBook.genre || [],
+          author: foundBook.author || "",
           condition: foundBook.condition || "",
           description: foundBook.description || "",
           location: foundBook.location || "",
@@ -207,6 +210,7 @@ export default function AddBook() {
 
     // Append all fields
     data.append("title", formData.title);
+    data.append("author", formData.author);
     data.append("condition", formData.condition);
     data.append("location", formData.location);
     data.append("productType", formData.productType);
@@ -234,11 +238,13 @@ export default function AddBook() {
         );
         if (foundBook) {
           await dispatch(UpdateBook({ id: foundBook._id, data }) as any);
+          await dispatch(GetAllBooks({}) as any);
         } else {
           throw new Error("Book not found for update");
         }
       } else {
-        await dispatch(AddBookSlice(data) as any);
+        await dispatch(AddBooks(data) as any);
+        await dispatch(GetAllBooks({}) as any);
       }
     } catch (error) {
       console.error("Error while submitting book:", error);
@@ -534,6 +540,16 @@ export default function AddBook() {
               error={errors.pages}
             />
           </div>
+          <div className="col-span-2 md:col-span-1">
+            <Input
+              name="author"
+              label="author*"
+              placeholder="Enter name of author"
+              value={formData.author}
+              onChange={handleInputChange}
+              error={errors.author}
+            />
+          </div>
 
           {/* Description */}
           <div className="col-span-2">
@@ -600,7 +616,7 @@ export default function AddBook() {
                   <img
                     src={image.preview}
                     alt="Preview"
-                    className="w-full h-32 object-cover rounded-lg shadow-md"
+                    className="w-full h-32 object-contain rounded-lg shadow-md"
                   />
                   <button
                     type="button"

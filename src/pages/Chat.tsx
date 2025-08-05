@@ -69,15 +69,15 @@ const ChatInterface = () => {
   useEffect(() => {
     if (
       book &&
-      book.author &&
-      book.author._id &&
+      book.uploader &&
+      book.uploader._id &&
       currentUserId &&
-      book.author._id !== currentUserId
+      book.uploader._id !== currentUserId
     ) {
       setSelectedUser({
-        userId: book.author._id,
-        fullName: book.author.fullName,
-        email: book.author.email,
+        userId: book.uploader._id,
+        fullName: book.uploader.fullName,
+        email: book.uploader.email,
         lastMessage: "",
         lastSeen: "",
         lastTime: "",
@@ -86,6 +86,7 @@ const ChatInterface = () => {
     }
   }, [book, currentUserId]);
 
+  console.log(currentUserId, "ss");
   const dispatch = useDispatch();
 
   useEffect(() => {

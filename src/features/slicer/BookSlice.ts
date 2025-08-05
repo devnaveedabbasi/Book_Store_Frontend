@@ -15,9 +15,24 @@ import {
 import { baseUrl, getConfig, getConfigFormData } from "./Slicer.ts";
 import { getAllBooks } from "../../../../BookStore/src/controllers/book.controller.js";
 // ✅ AddBook thunk
-export const AddBookSlice = createAsyncThunk(
-  "auth/AddBook",
+
+export const GetAllBooks = createAsyncThunk(
+  "auth/GetAllBooks",
   async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        baseUrl + Get_All_Books_Api,
+        getConfig()
+      );
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(HandleApiError(err));
+    }
+  }
+);
+export const AddBooks = createAsyncThunk(
+  "book/AddBook",
+  async (data: any, { rejectWithValue, dispatch }) => {
     try {
       const response = await axios.post(
         baseUrl + Add_Book_API,
@@ -26,13 +41,14 @@ export const AddBookSlice = createAsyncThunk(
       );
 
       toast.success("Book added successfully!");
-
+      dispatch(GetAllBooks() as any); // Corrected here
       return response.data;
     } catch (err) {
       return rejectWithValue(HandleApiError(err));
     }
   }
 );
+
 export const UpdateBook = createAsyncThunk(
   "auth/UpdateBook",
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
@@ -57,21 +73,6 @@ export const GetAllBooksByUser = createAsyncThunk(
     try {
       const response = await axios.get(
         baseUrl + Get_All_Books_By_User_Api,
-        getConfig()
-      );
-      return response.data;
-    } catch (err) {
-      return rejectWithValue(HandleApiError(err));
-    }
-  }
-);
-
-export const GetAllBooks = createAsyncThunk(
-  "auth/GetAllBooks",
-  async (data: any, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        baseUrl + Get_All_Books_Api,
         getConfig()
       );
       return response.data;
@@ -160,6 +161,7 @@ const initialState = {
   FilterBooks: [],
   AllReatedBooks: [],
   AllBookRequest: [],
+  isBookAdded: false,
 };
 
 // ✅ Slice
@@ -168,6 +170,19 @@ const BookSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
+    builder
+      .addCase(AddBooks.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+      })
+      .addCase(AddBooks.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isBookAdded = true;
+      })
+      .addCase(AddBooks.rejected, (state) => {
+        state.isLoading = false;
+        state.isError = true;
+      });
     builder
       .addCase(GetAllCategory.pending, (state) => {
         state.isLoading = true;
@@ -202,6 +217,7 @@ const BookSlice = createSlice({
       .addCase(GetAllBooks.fulfilled, (state, action) => {
         state.isLoading = false;
         state.AllBooks = action.payload;
+        state.isBookAdded = false; // ✅ Reset
       })
       .addCase(GetAllBooks.rejected, (state) => {
         state.isLoading = false;

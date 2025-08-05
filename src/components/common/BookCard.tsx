@@ -39,10 +39,8 @@ export default function BookCard({
   };
 
   const navigate = useNavigate();
-  const authorName =
-    book.author && typeof book.author === "object"
-      ? book.author.fullName
-      : "Unknown";
+  const authorName = book.author || "";
+  const uploaderName = book.uploader?.fullName || "";
   const categoryName = book.category?.name || "";
   const imageUrl =
     book.image && book.image.length > 0 ? book.image[0] : "/placeholder.svg";
@@ -162,7 +160,8 @@ export default function BookCard({
           <h3 className="text-lg font-bold text-gray-900 line-clamp-1 mb-1">
             {book.title}
           </h3>
-          <p className="text-sm text-gray-600">by {authorName}</p>
+          <p className="text-sm text-gray-600 mb-4">Writer {authorName}</p>
+          <p className="text-sm text-gray-600">Upload by {uploaderName}</p>
         </div>
 
         {/* Location + Pages */}

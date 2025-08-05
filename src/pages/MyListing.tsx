@@ -70,7 +70,7 @@ export default function BookListingPage() {
                     : "/placeholder.jpg"
                 }
                 alt={book.title}
-                className="w-full h-52 object-cover"
+                className="w-full h-52 object-contain"
               />
               <div className="p-4">
                 <h2 className="text-lg font-semibold mb-1">{book.title}</h2>

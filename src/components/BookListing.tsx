@@ -1,33 +1,55 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import BookCard from "./common/BookCard";
 import { useDispatch, useSelector } from "react-redux";
 import { GetAllBooks } from "../features/slicer/BookSlice";
 import type { Book } from "../pages/Shop";
-const BestsellingBooksCarousel: React.FC = () => {
-  const [currentSlide, setCurrentSlide] = React.useState(0);
-  const [itemsPerSlide, setItemsPerSlide] = React.useState(4);
-  const [isHovered, setIsHovered] = React.useState(false);
-  const [favorites, setFavorites] = React.useState<string[]>([]);
+import { GetUserDetails } from "../features/slicer/AuthSlice";
+import { useNavigate } from "react-router-dom";
 
+const BestsellingBooksCarousel: React.FC = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [itemsPerSlide, setItemsPerSlide] = useState(4);
+  const [isHovered, setIsHovered] = useState(false);
   const [books, setBooks] = React.useState<Book[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<any>(null);
+  const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const { UserData } = useSelector((state: any) => state.AuthSlice);
+
+  useEffect(() => {
+    dispatch(GetUserDetails() as any);
+  }, []);
+
+  useEffect(() => {
+    if (UserData) setCurrentUserId(UserData.data._id);
+  }, [UserData]);
+
   useEffect(() => {
     dispatch(GetAllBooks({}) as any);
   }, [dispatch]);
 
-  const { AllBooks } = useSelector((state: any) => state.BookSlice);
+  const { AllBooks, isBookAdded } = useSelector(
+    (state: any) => state.BookSlice
+  );
 
   useEffect(() => {
     if (AllBooks) {
       setBooks(AllBooks.data);
     }
-  }, [AllBooks]);
+  }, [AllBooks, isBookAdded]);
 
-  console.log(books);
+  const filteredBooks =
+    books && Array.isArray(books)
+      ? currentUserId
+        ? books.filter((book) => book?.uploader?._id !== currentUserId)
+        : books
+      : [];
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -48,19 +70,19 @@ const BestsellingBooksCarousel: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
-    if (!isHovered) {
+    if (!isHovered && filteredBooks.length > 0) {
       const interval = setInterval(() => {
         setCurrentSlide((prev) => {
-          const maxSlides = Math.max(0, books?.length - itemsPerSlide);
+          const maxSlides = Math.max(0, filteredBooks.length - itemsPerSlide);
           return prev >= maxSlides ? 0 : prev + 1;
         });
       }, 5000);
 
       return () => clearInterval(interval);
     }
-  }, [itemsPerSlide, isHovered]);
+  }, [itemsPerSlide, isHovered, filteredBooks]);
 
-  const maxSlides = Math.max(0, books?.length - itemsPerSlide);
+  const maxSlides = Math.max(0, filteredBooks.length - itemsPerSlide);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev >= maxSlides ? 0 : prev + 1));
@@ -71,8 +93,6 @@ const BestsellingBooksCarousel: React.FC = () => {
   };
 
   const toggleFavorite = async (bookId: string) => {
-    // Dummy API call simulation
-    // TODO: Replace with real API call
     setFavorites((prev) =>
       prev.includes(bookId)
         ? prev.filter((id) => id !== bookId)
@@ -87,7 +107,7 @@ const BestsellingBooksCarousel: React.FC = () => {
       y: 0,
       transition: {
         duration: 0.8,
-        ease: "easeOut", // revert to string for type safety
+        ease: "easeOut",
       },
     },
   };
@@ -102,6 +122,14 @@ const BestsellingBooksCarousel: React.FC = () => {
       },
     },
   };
+
+  if (filteredBooks.length === 0) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-16 text-center">
+        <h1 className="text-2xl font-semibold text-gray-600">No Books Found</h1>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16 ">
@@ -151,7 +179,7 @@ const BestsellingBooksCarousel: React.FC = () => {
             }}
             layout
           >
-            {books?.map((book, index) => (
+            {filteredBooks.map((book, index) => (
               <div
                 key={book._id}
                 className="flex-shrink-0 px-4"
@@ -225,6 +253,7 @@ const BestsellingBooksCarousel: React.FC = () => {
         transition={{ delay: 1.4 }}
       >
         <motion.button
+          onClick={() => navigate("/shop")}
           className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-xl hover:shadow-2xl"
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
