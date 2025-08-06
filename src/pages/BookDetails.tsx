@@ -31,6 +31,8 @@ import {
 import { baseUrlImg } from "../features/slicer/Slicer";
 import { format } from "date-fns";
 import Loading from "../components/Loading";
+import { GetUserDetails } from "../features/slicer/AuthSlice";
+import toast from "react-hot-toast";
 
 export default function BookDetailsPage() {
   const { slug } = useParams();
@@ -40,6 +42,8 @@ export default function BookDetailsPage() {
   const [mainImage, setMainImage] = useState<string>("");
   const [showLoading, setShowLoading] = useState(true);
   const [relatedBooks, setRelatedBooks] = useState([]);
+  const [user, setUser] = useState<any>(null);
+
   const { isLoading, AllReatedBooks } = useSelector(
     (state: any) => state.BookSlice
   );
@@ -47,6 +51,18 @@ export default function BookDetailsPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    dispatch(GetUserDetails() as any);
+  }, []);
+
+  const { UserData } = useSelector((state: RootState) => state.AuthSlice);
+  useEffect(() => {
+    if (UserData) {
+      setUser(UserData.data);
+    }
+    console.log(UserData);
+  }, [UserData]);
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -86,20 +102,27 @@ export default function BookDetailsPage() {
   const [loading, setLoading] = useState<Boolean>(false);
   const [isRequested, setIsRequested] = useState(false);
   useEffect(() => {
-    const checkRequest = async () => {
-      if (book && book._id) {
-        const res = await dispatch(GetCheckRequst(book._id) as any);
-        console.log("Payload:", res.payload);
+    if (user) {
+      // ✅ user ho to hi request bhejna
+      const checkRequest = async () => {
+        if (book && book._id) {
+          const res = await dispatch(GetCheckRequst(book._id) as any);
+          console.log("Payload:", res.payload);
 
-        // ✅ Set state from payload
-        setIsRequested(res.payload?.alreadyRequested === true);
-      }
-    };
-
-    checkRequest();
-  }, [book, dispatch]);
+          setIsRequested(res.payload?.alreadyRequested === true);
+        }
+      };
+      checkRequest();
+    }
+  }, [book, dispatch, user]);
 
   const BookRequest = async (id) => {
+    if (!user) {
+      toast.error("Please signup first");
+      navigate("/sign-up");
+      return; // exit early
+    }
+
     console.log("Book ID:", id);
     try {
       setLoading(true);

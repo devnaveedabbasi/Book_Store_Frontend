@@ -81,7 +81,7 @@ const BookRequestsPage = () => {
     const term = searchTerm.toLowerCase();
     return (
       request.book?.title?.toLowerCase().includes(term) ||
-      request.book?.author?.fullName?.toLowerCase().includes(term) ||
+      request.book?.owner?.fullName?.toLowerCase().includes(term) ||
       request.status?.toLowerCase().includes(term)
     );
   });
@@ -126,9 +126,7 @@ const BookRequestsPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">
-        My Book Requests
-      </h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Send Request</h1>
       <div className="mb-4 flex justify-end">
         <input
           type="text"
@@ -177,7 +175,7 @@ const BookRequestsPage = () => {
                   Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Author
+                  Uploader
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Product Type
@@ -207,7 +205,7 @@ const BookRequestsPage = () => {
                     {request.book?.title}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                    {request.book?.author?.fullName || "Unknown"}
+                    {request?.owner?.fullName || "Unknown"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                     {request.book?.productType || "Unknown"}
@@ -238,56 +236,81 @@ const BookRequestsPage = () => {
 
       {/* Modal for request details */}
       {showModal && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 px-2">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-4 relative">
+            {/* Close Button */}
             <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl"
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl font-bold"
               onClick={() => setShowModal(false)}
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold mb-2">
+
+            {/* Book Title */}
+            <h2 className="text-xl font-semibold mb-1 text-center">
               {selectedRequest.book?.title}
             </h2>
-            <div className="mb-2 text-gray-700">
-              By {selectedRequest.book?.author?.fullName || "Unknown"}
-            </div>
+
+            {/* Author */}
+            <p className="text-sm text-gray-500 text-center mb-2">
+              by {selectedRequest.owner?.fullName || "Unknown"}
+            </p>
+
+            {/* Book Image */}
             <img
               src={baseUrlImg + selectedRequest.book.image?.[0]}
               alt={selectedRequest.book?.title}
-              className="h-32 object-contain mx-auto mb-4"
+              className="h-28 object-contain mx-auto mb-4"
             />
-            <div className="mb-2 flex gap-2">
-              <strong>Status:</strong>{" "}
+
+            {/* Status */}
+            <div className="text-sm flex items-center justify-between mb-1">
+              <span className="font-medium">Status:</span>
               {StatusBadge({ status: selectedRequest.status })}
             </div>
-            <div className="mb-2">
-              <strong>Condition:</strong> {selectedRequest.book?.condition}
-            </div>
-            <div className="mb-2">
-              <strong>Product Type:</strong> {selectedRequest.book?.productType}
-            </div>
-            <div className="mb-2">
-              <strong>Location:</strong> {selectedRequest.book?.location}
-            </div>
-            <div className="mb-2">
-              <strong>Category:</strong> {selectedRequest.book?.category?.name}
-            </div>
-            <div className="mb-2">
-              <strong>Price:</strong> {selectedRequest.book?.price}
-            </div>
-            <div className="mb-2">
-              <strong>Description:</strong> {selectedRequest.book?.description}
-            </div>
-            <div className="mb-2">
-              <strong>Requested On:</strong>{" "}
-              {new Date(selectedRequest.createdAt).toLocaleString()}
-            </div>
-            <div className="mb-2">
-              <strong>Requester:</strong> {selectedRequest.requester?.fullName}
-            </div>
-            <div className="mb-2">
-              <strong>Owner:</strong> {selectedRequest.owner?.fullName}
+
+            {/* Details */}
+            <div className="space-y-1 text-sm text-gray-700">
+              <div className="flex justify-between">
+                <span>Condition:</span>
+                <span>{selectedRequest.book?.condition}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Type:</span>
+                <span>{selectedRequest.book?.productType}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Location:</span>
+                <span>{selectedRequest.book?.location}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Category:</span>
+                <span>{selectedRequest.book?.category?.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Price:</span>
+                <span>Rs. {selectedRequest.book?.price}</span>
+              </div>
+              <div>
+                <span className="font-medium">Description:</span>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {selectedRequest.book?.description || "N/A"}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <span>Requested:</span>
+                <span>
+                  {new Date(selectedRequest.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Requester:</span>
+                <span>{selectedRequest.requester?.fullName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Owner:</span>
+                <span>{selectedRequest.owner?.fullName}</span>
+              </div>
             </div>
           </div>
         </div>

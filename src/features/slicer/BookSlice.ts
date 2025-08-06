@@ -11,6 +11,7 @@ import {
   Update_Book_Api,
   Related_Books_Api,
   Get_Book_BY_Slug_ApI,
+  Delete_Book_Api,
 } from "../api/Api.ts";
 import { baseUrl, getConfig, getConfigFormData } from "./Slicer.ts";
 import { getAllBooks } from "../../../../BookStore/src/controllers/book.controller.js";
@@ -141,9 +142,25 @@ export const GetBookBySlug = createAsyncThunk(
   async (slug: any, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        baseUrl + Get_Book_BY_Slug_ApI + "/" + slug,
-        getConfig()
+        baseUrl + Get_Book_BY_Slug_ApI + "/" + slug
       );
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(HandleApiError(err));
+    }
+  }
+);
+
+export const DeleteBookById = createAsyncThunk(
+  "book/DeleteBookById",
+  async ({ id }: { id: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(
+        `${baseUrl + Delete_Book_Api}/${id}`,
+        getConfig() // should contain Authorization headers etc.
+      );
+
+      toast.success("Book Deleted Successfully!");
       return response.data;
     } catch (err) {
       return rejectWithValue(HandleApiError(err));

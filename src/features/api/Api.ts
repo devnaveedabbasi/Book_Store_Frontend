@@ -19,6 +19,7 @@ export const Get_All_Books_Api = "/book/all";
 export const Get_Book_BY_Slug_ApI = "/book/my";
 export const Filter_Books_Api = "/book/filter";
 export const Related_Books_Api = "/book/related";
+export const Delete_Book_Api = "/book/delete";
 
 // Book/Request
 

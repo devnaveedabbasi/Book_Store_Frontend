@@ -13,7 +13,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import PrimaryButton from "../components/common/Button";
 import { useDispatch, useSelector } from "react-redux";
-import { GetAllBooksByUser } from "../features/slicer/BookSlice";
+import {
+  DeleteBookById,
+  GetAllBooksByUser,
+} from "../features/slicer/BookSlice";
 import { baseUrlImg } from "../features/slicer/Slicer";
 
 export default function BookListingPage() {
@@ -35,9 +38,9 @@ export default function BookListingPage() {
     }
   }, [AllUserBooks]);
 
-  const handleDelete = (id: number) => {
-    console.log(id);
-    // Implement delete functionality here
+  const handleDelete = async (book: any) => {
+    await dispatch(DeleteBookById({ id: book._id }) as any);
+    await dispatch(GetAllBooksByUser() as any);
   };
 
   const navigate = useNavigate();
@@ -108,7 +111,10 @@ export default function BookListingPage() {
                     >
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button className="text-red-600 hover:text-red-800 transition">
+                    <button
+                      onClick={() => handleDelete(book)}
+                      className="text-red-600 hover:text-red-800 transition"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>

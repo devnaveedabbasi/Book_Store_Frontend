@@ -173,7 +173,7 @@ export default function HomePage() {
               ) : (
                 <button
                   onClick={() => navigate("/sign-up")}
-                  className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600 transition-all duration-300"
+                  className="text-purple-500 hover:text-purple-600 transition-all duration-300"
                 >
                   <User className="h-5 w-5" />
                 </button>
@@ -290,8 +290,9 @@ export default function HomePage() {
                           setIsMobileMenuOpen(false);
                           navigate("/sign-up");
                         }}
-                        className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600 transition-all duration-300"
+                        className="text-blue-600 hover:text-purple-600 transition-all duration-300"
                       >
+                        sd
                         <User className="h-5 w-5" />
                       </button>
                     )}
@@ -315,7 +316,7 @@ export default function HomePage() {
               transition={{ duration: 1 }}
             >
               <h1
-                className="text-4xl md:text-5xl lg:text-6xl font-bold 
+                className="text-4xl md:text-5xl lg:text-6xl font-bold  text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600
               "
               >
                 Selection of the World's Best Sellers

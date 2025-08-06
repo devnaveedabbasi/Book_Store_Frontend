@@ -246,6 +246,20 @@ export default function AddBook() {
         await dispatch(AddBooks(data) as any);
         await dispatch(GetAllBooks({}) as any);
       }
+      setFormData({
+        title: "",
+        author: "",
+        condition: "",
+        location: "",
+        productType: "sale",
+        categoryId: "",
+        pages: "",
+        description: "",
+        price: "",
+        genre: [],
+      });
+      setImages([]);
+      setErrors({});
     } catch (error) {
       console.error("Error while submitting book:", error);
       setLoading(false);

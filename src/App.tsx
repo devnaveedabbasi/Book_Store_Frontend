@@ -12,8 +12,8 @@ const Book = lazy(() => import("./pages/BookDetails"));
 const AddBook = lazy(() => import("./pages/AddBook"));
 const MyListing = lazy(() => import("./pages/MyListing"));
 const Chat = lazy(() => import("./pages/Chat"));
-const BookRequest = lazy(() => import("./pages/BookRequest"));
-const MyRequests = lazy(() => import("./pages/MyRequests"));
+const ReceiveRequest = lazy(() => import("./pages/BookRequest"));
+const SendRequest = lazy(() => import("./pages/SendRequest"));
 const SignUp = lazy(() => import("./pages/AuthPages/SignUp"));
 const Login = lazy(() => import("./pages/AuthPages/SingIn"));
 const ForgotPassword = lazy(() => import("./pages/AuthPages/ForgotPassword"));
@@ -72,11 +72,18 @@ function App() {
               path="/received-book-request"
               element={
                 <PrivateRoute>
-                  <MyRequests />
+                  <ReceiveRequest />
                 </PrivateRoute>
               }
             />
-            <Route path="/send-book-request" element={<BookRequest />} />
+            <Route
+              path="/send-book-request"
+              element={
+                <PrivateRoute>
+                  <SendRequest />
+                </PrivateRoute>
+              }
+            />
             <Route path="/sign-up" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
