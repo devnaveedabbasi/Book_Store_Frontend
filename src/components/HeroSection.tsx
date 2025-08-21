@@ -152,9 +152,9 @@ export default function HomePage() {
                     </div>
                   ) : (
                     <Link
-                      to={link.path}
+                      to={link.path || ""}
                       className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                        isActivePath(link.path)
+                        isActivePath(link.path || "")
                           ? "text-purple-600 font-semibold"
                           : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600"
                       }`}
@@ -268,10 +268,10 @@ export default function HomePage() {
                     ) : (
                       <Link
                         key={link.label}
-                        to={link.path}
+                        to={link.path || ""}
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={`px-2 py-2 rounded-md text-base font-medium transition-all duration-200 ${
-                          isActivePath(link.path)
+                          isActivePath(link.path || "")
                             ? "text-purple-600 font-semibold"
                             : "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600"
                         }`}
@@ -292,7 +292,6 @@ export default function HomePage() {
                         }}
                         className="text-blue-600 hover:text-purple-600 transition-all duration-300"
                       >
-                        sd
                         <User className="h-5 w-5" />
                       </button>
                     )}

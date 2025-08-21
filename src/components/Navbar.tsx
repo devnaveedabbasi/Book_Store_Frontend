@@ -144,12 +144,14 @@ export default function Navbar() {
             {user ? (
               <Avatar user={user} setUser={setUser} />
             ) : (
-              <button
-                onClick={() => navigate("/sign-up")}
-                className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600 transition-all duration-300"
-              >
-                <User className="h-5 w-5" />
-              </button>
+              <>
+                <button
+                  onClick={() => navigate("/sign-up")}
+                  className="text-purple-500 hover:text-purple-600 duration-300"
+                >
+                  <User className="h-5 w-5" />
+                </button>
+              </>
             )}
           </div>
 
@@ -259,7 +261,7 @@ export default function Navbar() {
                         setIsMobileMenuOpen(false);
                         navigate("/sign-up");
                       }}
-                      className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:text-purple-600 transition-all duration-300"
+                      className="text-purple-500 hover:text-purple-600 transition-all duration-300"
                     >
                       <User className="h-5 w-5" />
                     </button>
